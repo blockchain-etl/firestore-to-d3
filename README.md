@@ -37,8 +37,8 @@ const firebaseConfig = {
   };
 ```
 
-Replace `webview/csmain.js` from line 3 with the value of `firebaseConfig` you
-got from the Firebase console.
+Replace line 1 of `public/main.js` with the value of `firebaseConfig` you got
+from the Firebase console.
 
 ## Initialize your dev environment for hosting
 
