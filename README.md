@@ -48,3 +48,8 @@ Firbase.
 ```bash
 firebase init hosting
 ```
+
+## Deploy
+```bash
+firebase deploy
+```
