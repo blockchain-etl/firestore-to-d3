@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://www.gstatic.com/firebasejs/7.8.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.8.1/firebase-firestore.js"></script>
+    <script src="//d3js.org/d3.v5.min.js" charset="utf-8"></script>
+    <script src="main.js"></script>
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!--
+    <link rel="stylesheet" href="style.css" />
+-->
+    <title>firestore-to-d3</title>
+  </head>
+
+  <body>
+    <svg width="960" height="500"></svg>
+    <script>
+        createChart({
+            id: '#svg',
+            collection: 'transactions'
+        });
+    </script>
+  </body>
+
+</html>
