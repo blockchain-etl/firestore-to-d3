@@ -1,4 +1,4 @@
-# firestore-to-browser
+# firestore-to-d3
 
 ## Update Firestore collection to be readable:
 
