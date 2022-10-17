@@ -1,13 +1,12 @@
 width=1600;
 height=900;
 collection="transactions00";
-nodes = [
+initnodes = [
 {id:"abcc"},{id:"bgogo"},{id:"bibox"},{id:"bigone"},{id:"bilaxy"},{id:"binance"},{id:"bitmart"},{id:"bitun.io"},{id:"bitbox"},{id:"bitfinex"},{id:"bithumb"},{id:"bitmax"},{id:"bittrex"},{id:"bity.com"},{id:"coss.io"},{id:"crex24"},{id:"cashierest"},{id:"changelly"},{id:"cobinhood"},{id:"coinexchange.io"},{id:"coinbene"},{id:"coinbene:"},{id:"coindelta"},{id:"coinex"},{id:"coinhako"},{id:"cryptopia"},{id:"digifinex"},{id:"fcoin"},{id:"gbx"},{id:"ggbtc.com"},{id:"gate.io"},{id:"gemini"},{id:"hitbtc"},{id:"hotbit"},{id:"huobi"},{id:"kraken"},{id:"kryptono"},{id:"kucoin"},{id:"latoken"},{id:"liqui.io"},{id:"liquid"},{id:"livecoin.net"},{id:"mercatox"},{id:"nexbit"},{id:"otcbtc"},{id:"okex"},{id:"paribu"},{id:"peatio"},{id:"poloniex"},{id:"remitano"},{id:"shapeshift"},{id:"tidex"},{id:"topbtc"},{id:"trade.io"},{id:"uex"},{id:"upbit"},{id:"yobit.net"},{id:"yunbi"},{id:"zb.com"},{id:"binance"},{id:"bitfinex"},{id:"bittrex"},{id:"gemini"},{id:"kraken"},{id:"poloniex"}
 ];
-links = [
-{source: "binance", target: "bitmart"}
+initlinks = [
+//{source: "binance", target: "bitmart"}
 ];
-
 
 const firebaseConfig = {
     apiKey: "AIzaSyAsFzJuQOwc6Uohdz988k8k2u8JzFLuQmk",
@@ -21,187 +20,203 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-    function handleZoom(e) {
-        d3.selectAll("svg g")
-            .attr("transform", e.transform)
-    }
+//var graph;
+//var graph = new myGraph("#svgdiv");
 
-    function initZoom(zoom) {
-        d3.select('svg')
-            .call(zoom);
-    }
-    function createTooltip() {
-        return (d3.select("body")
-            .append("div")
-            .style("position", "absolute")
-            .style("z-index", "10")
-            .style("visibility", "hidden"));
-    }
+function myGraph() {
 
-    function initializeGraph(nodes, links) {
-        var svg = d3.select('svg');
-        // erase everything
-        svg.selectAll("*").remove();
+    // Add and remove elements on the graph object
+    this.addNode = function (id) {
+        nodes.push({"id": id});
+        update();
+    };
 
-        // initialize zoom
-        var zoom = d3.zoom()
-            .on("zoom", this.handleZoom)
-        this.initZoom(zoom)
-        d3.select("svg")
-            .call(zoom)
-
-        // initialize tooltip
-        tooltip = this.createTooltip()
-
-        // set up simulation, link and node
-        simulation = d3
-            .forceSimulation(nodes)
-            .force('link', d3.forceLink(links).id(function (n) { return n.id; }))
-            .force(
-                "x",
-                d3.forceX().strength(0.05)
-            )
-            .force(
-                "y",
-                d3.forceY().strength(0.05)
-            )
-            .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter(width / 2, height / 2));
-
-        link = svg.append("g")
-            .attr('stroke', 'black')
-            .attr('stroke-opacity', 0.8)
-            .selectAll('line')
-            .data(links)
-            .join('line')
-            .attr('id', (d) => d.source.id + '-' + d.target.id)
-            .attr('stroke-width', 1.5);
-
-
-        node = svg.append("g")
-            .selectAll("circle")
-            .data(nodes)
-            .join("circle")
-            .attr("id", function (d) { return d.id; })
-            .attr("r", function (d) {
-                return 15;
-            })
-            .attr("class", "node")
-            .attr('fill', function (d) { return 'grey';
-                if (!clusterColors.hasOwnProperty(d.cluster)) {
-                    clusterColors[d.cluster] = "#" + Math.floor(Math.random() * 16777215).toString(16)
-                }
-                return clusterColors[d.cluster]
-            })
-            .on("mouseover", function (d) {
-                tooltip.text(d.srcElement["__data__"]["id"])
-                tooltip.style("visibility", "visible")
-            })
-            .on("mousemove", function (event, d) { return tooltip.style("top", (event.y - 10) + "px").style("left", (event.x + 10) + "px"); })
-            .on("mouseout", function (event, d) { return tooltip.style("visibility", "hidden"); })
-//            .call(this.drag(simulation));
-
-
-
-        simulation.on("tick", () => {
-            node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-            link
-                .attr('x1', (d) => d.source.x)
-                .attr('y1', (d) => d.source.y)
-                .attr('x2', (d) => d.target.x)
-                .attr('y2', (d) => d.target.y);
-        });
-    }
-
-    function updateGraph(nodes, links) {
-
-        // Update existing nodes
-        node.selectAll('circle').style('fill', function (d) { return 'grey';
-            if (!clusterColors.hasOwnProperty(d.cluster)) {
-                clusterColors[d.cluster] = "#" + Math.floor(Math.random() * 16777215).toString(16);
+    this.removeNode = function (id) {
+        var i = 0;
+        var n = findNode(id);
+        while (i < links.length) {
+            if ((links[i]['source'] == n) || (links[i]['target'] == n)) {
+                links.splice(i, 1);
             }
-            return clusterColors[d.cluster];
-        });
+            else i++;
+        }
+        nodes.splice(findNodeIndex(id), 1);
+        update();
+    };
 
-        // Remove old nodes
-        node.exit().remove();
+    this.removeLink = function (source, target) {
+        for (var i = 0; i < links.length; i++) {
+            if (links[i].source.id == source && links[i].target.id == target) {
+                links.splice(i, 1);
+                break;
+            }
+        }
+        update();
+    };
 
-        // Add new nodes
-        node = node.data(nodes, (d) => d.id);
-        node = node
-            .enter()
-            .append('circle')
-            .attr("r", function (d) {
-                return 15;
-            })
-            .attr('fill', function (d) { return 'grey';
-                if (!clusterColors.hasOwnProperty(d.cluster)) {
-                    clusterColors[d.cluster] = "#" + Math.floor(Math.random() * 16777215).toString(16)
-                }
-                return clusterColors[d.cluster]
-            })
-            .on("mouseover", function (d) {
-                tooltip.text(d.srcElement["__data__"]["id"])
-                tooltip.style("visibility", "visible")
-            })
-            .on("mousemove", function (event, d) { return tooltip.style("top", (event.y - 10) + "px").style("left", (event.x + 10) + "px"); })
-            .on("mouseout", function (event, d) { return tooltip.style("visibility", "hidden"); })
-//            .call(this.drag())
-            .merge(node);
+    this.removeallLinks = function () {
+        links.splice(0, links.length);
+        update();
+    };
 
-        link = link.data(links, (d) => {
-            return d.source.id + '-' + d.target.id;
-        });
+    this.removeAllNodes = function () {
+        nodes.splice(0, links.length);
+        update();
+    };
 
-        // Remove old links
+    this.addLink = function (source, target, value) {
+        var s = findNode(source),
+            t = findNode(target)
+        if (typeof s === 'undefined') {
+            console.log("Adding node: ", source);
+            this.addNode(source);
+        } else {
+            //sourceElement = document.getElementById(tx['source']);
+            //sourceElement.setAttribute('r',s.weight)
+            //console.log(s);
+        }
+        if (typeof t === 'undefined') {
+            console.log("Adding node: ", target);
+            this.addNode(target);
+        } else {
+            targetElement = document.getElementById(tx['target']);
+            //console.log(t);
+        }
+        if (typeof s !== 'undefined' && typeof t !== 'undefined') {
+            if (links.length > 100) {
+                links.shift();
+            }
+            links.push({"source": s, "target": t, "value": value});
+            update();
+        }
+    };
+
+    var findNode = function (id) {
+        for (var i in nodes) {
+            if (nodes[i]["id"] === id) return nodes[i];
+        }
+        ;
+    };
+
+    var findNodeIndex = function (id) {
+        for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].id == id) {
+                return i;
+            }
+        }
+        ;
+    };
+
+    // set up the D3 visualisation in the specified element
+    var w = width, h = height;
+
+    var color = d3.scale.category20();
+
+    var vis = d3.select("body")
+            .append("svg:svg")
+            .attr("width", w)
+            .attr("height", h)
+            .attr("id", "svg")
+            .attr("pointer-events", "all")
+            .attr("viewBox", "0 0 " + w + " " + h)
+            .attr("perserveAspectRatio", "xMinYMid")
+            .append('svg:g');
+
+    var force = d3.layout.force();
+
+    var nodes = force.nodes(),
+            links = force.links();
+
+    var update = function () {
+        var link = vis.selectAll("line")
+                .data(links, function (d) {
+                    //console.log(d)
+                    return d.source.id + "-" + d.target.id;
+                });
+
+        link.enter().append("line")
+                .attr("id", function (d) {
+                    return d.source.id + "-" + d.target.id;
+                })
+                .attr("stroke-width", function (d) {
+                    return d.value / 10;
+                })
+                .attr("class", "link");
+        link.append("title")
+                .text(function (d) {
+                    return d.value;
+                });
         link.exit().remove();
 
-        link = link
-            .enter()
-            .append('line')
-            .attr('id', (d) => d.source.id + '-' + d.target.id)
-            .attr('stroke', 'black')
-            .attr('stroke-opacity', 0.8)
-            .attr('stroke-width', 1.5)
-            .merge(link);
+        var node = vis.selectAll("g.node")
+                .data(nodes, function (d) {
+                    return d.id;
+                });
 
-        // Set up simulation on new nodes and edges
-        try {
-            simulation
-                .nodes(nodes)
-                .force('link', d3.forceLink(links).id(function (n) { return n.id; }))
-                .force(
-                    'collide',
-                    d3
-                        .forceCollide()
-                        .radius(function (d) {
-                            return 20;
-                        })
-                )
-                .force('charge', d3.forceManyBody())
-                .force('center', d3.forceCenter(width / 2, height / 2));
-        } catch (err) {
-            console.log('err', err);
-        }
+        var nodeEnter = node.enter().append("g")
+                .attr("class", "node")
+                .call(force.drag);
 
-        simulation.on('tick', () => {
-            node.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
-            link
-                .attr('x1', (d) => d.source.x)
-                .attr('y1', (d) => d.source.y)
-                .attr('x2', (d) => d.target.x)
-                .attr('y2', (d) => d.target.y);
+        nodeEnter.append("svg:circle")
+                .attr("r", 20)
+                //.attr("r", function(d){
+                //    return d.weight / 10;
+                //})
+                .attr("id", function (d) {
+                    return "Node;" + d.id;
+                })
+                .attr("class", "nodeStrokeClass")
+                .attr("fill", function(d) { return color(d.id); });
+
+        nodeEnter.append("svg:text")
+                .attr("class", "textClass")
+                .attr("x", 14)
+                .attr("y", ".31em")
+                .text(function (d) {
+                    return d.id;
+                });
+
+        node.exit().remove();
+
+        force.on("tick", function () {
+
+            node.attr("transform", function (d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
+
+            link.attr("x1", function (d) {
+                return d.source.x;
+            })
+                    .attr("y1", function (d) {
+                        return d.source.y;
+                    })
+                    .attr("x2", function (d) {
+                        return d.target.x;
+                    })
+                    .attr("y2", function (d) {
+                        return d.target.y;
+                    });
         });
-        simulation.alphaTarget(0.1).restart();
-    }
+
+        // Restart the force layout.
+        force
+                .gravity(.01)
+                .charge(-80000)
+                //.gravity(0)
+                //.charge(function(d){
+                //    var charge = -500;
+                //    if (d.index === 0) charge = 10 * charge;
+                //    return charge;
+                //})
+                .friction(0)
+                .linkDistance( function(d) { return d.value * 10 } )
+                .size([w, h])
+                .start();
+    };
 
 
-pi = 3.14159;
-function radiusToArea(radius) {
-  return pi * radius**2;
-}
-function areaToRadius(area) {
-  return area <= 0 ? 5 : Math.sqrt(area/pi);
+    // Make it all go
+    update();
 }
 
 seen = [];
@@ -215,33 +230,40 @@ const firestoreCollection = firebase
 firestoreCollection.get().then(onData);
 firestoreCollection.onSnapshot(onData);
 
-function onData (querySnapshot) {
-  querySnapshot.forEach(t => {
-    tx = t.data();
-    link = d3.selectAll('svg').append("g")
-      .attr('stroke', 'black')
-      .attr('stroke-opacity', 0.8)
-      .selectAll('line')
-      .data(links)
-      .join('line')
-      .attr('id', (d) => tx['source'] + '-' + tx['target'])
-      .attr('stroke-width', 1.5);
-
-    sourceElement = document.getElementById(tx['source']);
-    targetElement = document.getElementById(tx['target']);
-    if (sourceElement != null) {
-      sourceArea = radiusToArea(sourceElement.getAttribute('r'));
-      sourceArea -= Number(tx['value']);
-      sourceElement.style['fill'] = 'blue';
-      sourceElement.setAttribute('r', areaToRadius(sourceArea));
+function initializeGraph() {
+    console.log("Starting");
+    return;
+    for (const n of initnodes) {
+        graph.addNode(n['id']);
     }
-    if (targetElement != null) {
-      targetArea = radiusToArea(targetElement.getAttribute('r'));
-      targetArea -= Number(tx['value']);
-      targetElement.style['fill'] = 'red';
-      sourceElement.setAttribute('r', areaToRadius(targetArea));
-    }
-  });
+    keepNodesOnTop();
 }
 
-initializeGraph(nodes,links);
+function onData(querySnapshot) {
+    querySnapshot.forEach(t => {
+        tx = t.data();
+        if (tx['source'] != '' && tx['target'] != '') {
+            //console.log(tx['source'], tx['target'], tx['value']);
+            // callback for the changes in the network
+            //graph.removeLink(tx['source'], tx['target']);
+            //graph.addLink(tx['source'], tx['target'], tx['value']);
+            graph.addLink(tx['source'], tx['target'], 20);
+        }
+    });
+        keepNodesOnTop();
+}
+
+//initializeGraph();
+
+// because of the way the network is created, nodes are created first, and links second,
+// so the lines were on top of the nodes, this just reorders the DOM to put the svg:g on top
+function keepNodesOnTop() {
+    $(".nodeStrokeClass").each(function( index ) {
+        var gnode = this.parentNode;
+        gnode.parentNode.appendChild(gnode);
+    });
+}
+function clearNodes() {
+    d3.select("svg")
+            .remove();
+}
